@@ -181,6 +181,7 @@ function toggleAuthMode() {
     document.getElementById('toggle-btn').innerText = isRegistering ? "Existing Operator? Login" : "New Operator? Register Unit";
 }
 
+
 async function handleAuth() {
     const user = document.getElementById('user').value;
     const pass = document.getElementById('pass').value;
@@ -199,13 +200,13 @@ async function handleAuth() {
             body: JSON.stringify(payload)
         });
 
-        // 🔥 FIX: handle bad / non-JSON responses safely
         const text = await res.text();
+
         let data;
         try {
             data = JSON.parse(text);
         } catch {
-            throw new Error("INVALID_RESPONSE");
+            throw new Error("INVALID_JSON");
         }
 
         if (data.success) {
@@ -228,9 +229,17 @@ async function handleAuth() {
 
     } catch (e) {
         console.error("AUTH ERROR:", e);
-        alert("BACKEND OFFLINE OR STARTING.\nWait ~10 seconds and try again.");
+
+        if (e.message === "INVALID_JSON") {
+            alert("SERVER ERROR: Invalid response (not JSON)");
+        } else if (e.message.includes("Failed to fetch")) {
+            alert("NETWORK ERROR: Cannot reach backend");
+        } else {
+            alert("AUTH ERROR: " + e.message);
+        }
     }
 }
+
 
 async function bootstrapEngine() {
     if ('serviceWorker' in navigator) {
